@@ -6,7 +6,6 @@
   PYTHON_VERSION = "3.11"
 
 [functions]
-  python_runtime = "python3.11"
   included_files = ["templates/**", "static/**", "*.py"]
 
 [[redirects]]
