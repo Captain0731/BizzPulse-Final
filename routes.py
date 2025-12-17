@@ -63,30 +63,37 @@ def submit_contact():
     
     if form.validate_on_submit():
         try:
-            # Create new contact entry
-            contact = Contact(
-                name=form.name.data.strip(),
-                email=form.email.data.strip().lower(),
-                subject=form.subject.data.strip() if form.subject.data else None,
-                message=form.message.data.strip(),
-                phone=form.phone.data.strip() if form.phone.data else None,
-                company=form.company.data.strip() if form.company.data else None
-            )
-            
-            db.session.add(contact)
-            db.session.commit()
-            
-            app.logger.info(f"New contact submission from {contact.email}")
-            
-            # Prepare contact data for email
+            # Prepare contact data from form
             contact_data = {
-                'name': contact.name,
-                'email': contact.email,
-                'subject': contact.subject,
-                'message': contact.message,
-                'phone': contact.phone,
-                'company': contact.company
+                'name': form.name.data.strip(),
+                'email': form.email.data.strip().lower(),
+                'subject': form.subject.data.strip() if form.subject.data else None,
+                'message': form.message.data.strip(),
+                'phone': form.phone.data.strip() if form.phone.data else None,
+                'company': form.company.data.strip() if form.company.data else None
             }
+            
+            # Check if database is available and save to DB
+            database_url = os.environ.get("DATABASE_URL")
+            if database_url and not database_url.startswith("sqlite"):
+                try:
+                    # Create new contact entry
+                    contact = Contact(
+                        name=contact_data['name'],
+                        email=contact_data['email'],
+                        subject=contact_data['subject'],
+                        message=contact_data['message'],
+                        phone=contact_data['phone'],
+                        company=contact_data['company']
+                    )
+                    
+                    db.session.add(contact)
+                    db.session.commit()
+                    app.logger.info(f"New contact submission from {contact.email}")
+                except Exception as db_error:
+                    app.logger.warning(f"Database save failed, continuing with email: {str(db_error)}")
+            else:
+                app.logger.warning("Database not configured, skipping DB save")
             
             # Send email notification to admin
             admin_email = os.environ.get('ADMIN_EMAIL', 'harshilgajjar602@gmail.com')
@@ -98,7 +105,7 @@ def submit_contact():
                 # Send auto-reply to customer
                 auto_reply_sent, auto_reply_result = send_auto_reply_email(contact_data)
                 if auto_reply_sent:
-                    app.logger.info(f"Auto-reply sent to {contact.email}")
+                    app.logger.info(f"Auto-reply sent to {contact_data['email']}")
                 else:
                     app.logger.warning(f"Auto-reply failed: {auto_reply_result}")
             else:
@@ -111,7 +118,10 @@ def submit_contact():
             }), 200
             
         except Exception as e:
-            db.session.rollback()
+            try:
+                db.session.rollback()
+            except:
+                pass
             app.logger.error(f"Error saving contact form: {str(e)}")
             
             flash('Sorry, there was an error sending your message. Please try again.', 'error')
@@ -145,6 +155,16 @@ def subscribe_newsletter():
     if form.validate_on_submit():
         try:
             email = form.email.data.strip().lower()
+            
+            # Check if database is available
+            database_url = os.environ.get("DATABASE_URL")
+            if not database_url or database_url.startswith("sqlite"):
+                # Database not configured, just return success
+                app.logger.warning("Database not configured, skipping newsletter subscription")
+                return jsonify({
+                    'status': 'success',
+                    'message': 'Thank you for subscribing to our newsletter!'
+                }), 200
             
             # Check if email already exists
             existing_subscription = Newsletter.query.filter_by(email=email).first()
