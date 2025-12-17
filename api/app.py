@@ -21,11 +21,13 @@ CORS(app)
 
 # Import models and forms without DB initialization
 try:
-    from forms import ContactForm, NewsletterForm
-    from email_service import send_contact_email, send_auto_reply_email
-    from pdf_generator import PortfolioPDFGenerator
+    from email_service_vercel import send_contact_email, send_auto_reply_email
+    from pdf_generator_vercel import PortfolioPDFGenerator
 except ImportError as e:
     logger.warning(f"Import warning: {e}")
+    send_contact_email = None
+    send_auto_reply_email = None
+    PortfolioPDFGenerator = None
 
 # ============ Routes ============
 @app.route('/')
@@ -88,9 +90,12 @@ def contact():
             }), 400
         
         # Send emails
-        admin_email = os.environ.get('ADMIN_EMAIL', 'harshilgajjar602@gmail.com')
-        send_contact_email(contact_data, admin_email)
-        send_auto_reply_email(contact_data)
+        if send_contact_email and send_auto_reply_email:
+            admin_email = os.environ.get('ADMIN_EMAIL', 'harshilgajjar602@gmail.com')
+            send_contact_email(contact_data, admin_email)
+            send_auto_reply_email(contact_data)
+        else:
+            logger.warning("Email functions not available")
         
         logger.info(f"Contact form submitted: {contact_data['email']}")
         
@@ -135,6 +140,12 @@ def newsletter():
 @app.route('/api/generate-pdf')
 def generate_pdf():
     try:
+        if not PortfolioPDFGenerator:
+            return jsonify({
+                'status': 'error',
+                'message': 'PDF generation not available'
+            }), 503
+        
         pdf_generator = PortfolioPDFGenerator()
         pdf_buffer = pdf_generator.generate_simple_pdf()
         
