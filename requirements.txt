@@ -1,0 +1,12 @@
+Flask==3.0.0
+flask-sqlalchemy==3.1.1
+flask-wtf==1.2.1
+python-dotenv==1.0.0
+resend==2.1.0
+reportlab==4.0.7
+Pillow==10.2.0
+requests==2.31.0
+Werkzeug==3.0.1
+WTForms==3.1.1
+SQLAlchemy==2.0.23
+
