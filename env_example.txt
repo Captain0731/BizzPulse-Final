@@ -1,0 +1,14 @@
+# Database (Railway PostgreSQL)
+DATABASE_URL=postgresql://user:password@host:port/database
+
+# Security
+SECRET_KEY=your-super-secret-key-change-this
+
+# Email (Resend)
+RESEND_API_KEY=re_xxxxxxxxxxxx
+ADMIN_EMAIL=admin@yourdomain.com
+
+# Environment
+FLASK_ENV=production
+PORT=5001
+
