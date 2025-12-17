@@ -13,7 +13,3 @@ venv/
 ENV/
 env/
 *.log
-.git/
-.gitignore
-README.md
-
