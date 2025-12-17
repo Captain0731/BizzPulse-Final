@@ -17,6 +17,12 @@ app = Flask(__name__,
             static_folder=os.path.join(parent_dir, 'static'))
 
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'vercel-secret-key')
+app.config['WTF_CSRF_ENABLED'] = False
+
+# Add csrf_token to Jinja context (returns empty string when disabled)
+@app.context_processor
+def inject_csrf_token():
+    return dict(csrf_token=lambda: '')
 
 # Import helper functions
 try:
