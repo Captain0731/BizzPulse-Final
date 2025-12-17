@@ -1,0 +1,17 @@
+[build]
+  command = "pip install -r requirements.txt"
+  functions = ".netlify/functions"
+
+[build.environment]
+  PYTHON_VERSION = "3.11"
+
+[functions]
+  python_runtime = "python3.11"
+  included_files = ["templates/**", "static/**", "*.py"]
+
+[[redirects]]
+  from = "/*"
+  to = "/.netlify/functions/app"
+  status = 200
+  force = true
+
